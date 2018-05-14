@@ -1,0 +1,88 @@
+---
+title: "Home Advantage Literature Synthesis"
+author: "Gjalt-Jorn Peters & Tim Vincken"
+date: "`r format(Sys.time(), '%H:%M:%S on %Y-%m-%d %Z (GMT%z)')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+### Load packages
+require('userfriendlyscience');
+require('metabefor');
+safeRequire('here');
+safeRequire('plyr');
+
+### By default hide R code
+knitr::opts_chunk$set(echo = FALSE);
+
+### Set path for query hit exports
+queryHitExportPath <- here::here("queries");
+
+### Set path for screening
+screeningPath <- here::here("screening");
+
+```
+
+## First query run: 2018-05-14
+
+The first query is:
+
+```
+("Home advantage" OR "home court advantage" OR "home team advantage" OR "home venue advantage" OR "home field advantage") AND ("soccer" OR "football") NOT ("American Football" NOT "Australian football") 
+```
+
+This was run at 2018-05-14 in PubMed (53 hits) and PsycINFO accessed through EbscoHost (63 hits), and exported to csv, RIS (called 'medline' in PubMed) and bibtex (from PsycINFO) formats. The RIS files were then imported in R using `metabefor`.
+
+```{r echo=TRUE}
+
+### Import PsycINFO hits
+firstQueryIteration_psycinfo <-
+  importRISlike(file.path(queryHitExportPath,
+                          "psycinfo-2018-05-14.ris"),
+                encoding="native.enc");
+
+### Import PubMed hits
+firstQueryIteration_pubmed <-
+  importRISlike(file.path(queryHitExportPath,
+                          "pubmed-2018-05-14.ris"));
+
+### Merge the two sets of hits
+firstQueryIteration <-
+  findDuplicateReferences(primaryRefs = firstQueryIteration_psycinfo,
+                          secondaryRefs = firstQueryIteration_pubmed,
+                          duplicateFieldValue = "dupl",
+                          newRecordValue = "PubMed",
+                          duplicateValue = "duplicate (both PsycINFO and PubMed)",
+                          originalValue = "PsycINFO");
+
+### Generate bibtex keys
+firstQueryIteration$output$records <-
+  generateBibtexkeys(firstQueryIteration$output$records);
+
+### Add query date identifier to bibtex keys
+firstQueryIteration$output$records$bibtexkey <-
+  paste0(firstQueryIteration$output$records$bibtexkey,
+         "-20180514");
+
+### Export the hits to bibtex for screening in JabRef
+sysrevExport(firstQueryIteration,
+             filename=file.path(screeningPath,
+                                "2018-05-14-screening.bib"),
+             screeningType="screening");
+
+```
+
+The merged list of query hits has now been exported to file "2018-05-14-screening.bibtex" in directory "screening" and can be opened using JabRef, which can be downloaded from https://www.fosshub.com/JabRef.html.
+
+In JabRef, open the 'Options' drop-down menu and select 'General Fields' to configure which fields are available in the different tabs when opening an entry. To change the fields that are visible in the overview table of all references, open the 'Options' drop-down menu als select 'Preferences', then edit the 'Entry table columns'.
+
+Note that in bibtex (and therefore JabRef), you can create new fields on the fly. In this case, use field 'screening1' for screening the hits of this first screening iteration. For every entry, add the following text in the 'screening' field:
+
+- If it is excluded, add the reason, specifically (these are ordered progressively; i.e. if one of the criteria matches, apply it and move on to the next entry):
+    - **`nohome`** if the study does not deal with the home advantage;
+    - **`nosoccer`** if the study does not report on data exclusively for soccer (*also* reporting data for other sports is no grounds for exclusion of course)
+    - **`nopro`** if the study does not report on data exclusively for professionals (*also* reporting data for amateur soccer is no grounds for exclusion of course)
+- If it is included, add **`incl`**, followed by two opening brackets (**`[[`**) and a list of the relevant variables that were included separated by pipes (**`|`**) and terminated by two closing brackets (**`]]`**), such as `incl [[ supporting audience size | distance from home city ]]`
+
+So once JabRef is opened, when screening, make sure that the 'screening1' field is shown in the entry table (i.e. that it is one of the entry table columns), and create one entry editing tab using 'General Fields' that contains the fields `title`, `abstract`, and `screening1`. You can then use this tab for the screening. It is also convenient to show field `dupl` in either the entry table or the screening tab in the entry editor, because for duplicate records (that were identified as such - the algorithm may miss some duplicates of course), that field contains the text `dupl`.
+
