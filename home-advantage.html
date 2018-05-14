@@ -120,7 +120,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Home Advantage Literature Synthesis</h1>
 <h4 class="author"><em>Gjalt-Jorn Peters &amp; Tim Vincken</em></h4>
-<h4 class="date"><em>21:40:53 on 2018-05-14 CEST (GMT+0200)</em></h4>
+<h4 class="date"><em>21:43:07 on 2018-05-14 CEST (GMT+0200)</em></h4>
 
 </div>
 
@@ -886,7 +886,7 @@ firstQueryIteration &lt;-
                           newRecordValue = &quot;PubMed&quot;,
                           duplicateValue = &quot;duplicate (both PsycINFO and PubMed)&quot;,
                           originalValue = &quot;PsycINFO&quot;);</code></pre>
-<pre><code>## Merging bibliographic databases and flagging duplicates. Processing 63 primary references and 53 secondary references. It is now 2018-05-14 21:40:58.
+<pre><code>## Merging bibliographic databases and flagging duplicates. Processing 63 primary references and 53 secondary references. It is now 2018-05-14 21:43:12.
 ## 
   |                                                                       
   |                                                                 |   0%
@@ -994,7 +994,7 @@ firstQueryIteration &lt;-
   |================================================================ |  98%
   |                                                                       
   |=================================================================| 100%
-## Processed 63 primary and 53 secondary records. Identified 2 duplicate records. Total number of records in resulting set is 116, of which 2 duplicates. It is now 2018-05-14 21:40:59. The process took roughly: Time difference of 0.948523 secs.</code></pre>
+## Processed 63 primary and 53 secondary records. Identified 2 duplicate records. Total number of records in resulting set is 116, of which 2 duplicates. It is now 2018-05-14 21:43:13. The process took roughly: Time difference of 0.8759091 secs.</code></pre>
 <pre class="r"><code>### Generate bibtex keys
 firstQueryIteration$output$records &lt;-
   generateBibtexkeys(firstQueryIteration$output$records);
@@ -1009,7 +1009,7 @@ sysrevExport(firstQueryIteration,
              filename=file.path(screeningPath,
                                 &quot;2018-05-14-screening.bib&quot;),
              screeningType=&quot;screening&quot;);</code></pre>
-<p>The merged list of query hits has now been exported to file “2018-05-14-screening.bibtex” in directory “screening” and can be opened using JabRef, which can be downloaded from <a href="https://www.fosshub.com/JabRef.html" class="uri">https://www.fosshub.com/JabRef.html</a>.</p>
+<p>The merged list of query hits has now been exported to file “2018-05-14-screening.bib” in directory “screening” and can be opened using JabRef, which can be downloaded from <a href="https://www.fosshub.com/JabRef.html" class="uri">https://www.fosshub.com/JabRef.html</a>.</p>
 <p>In JabRef, open the ‘Options’ drop-down menu and select ‘General Fields’ to configure which fields are available in the different tabs when opening an entry. To change the fields that are visible in the overview table of all references, open the ‘Options’ drop-down menu als select ‘Preferences’, then edit the ‘Entry table columns’.</p>
 <p>Note that in bibtex (and therefore JabRef), you can create new fields on the fly. In this case, use field ‘screening1’ for screening the hits of this first screening iteration. For every entry, add the following text in the ‘screening’ field:</p>
 <ul>
@@ -1022,6 +1022,7 @@ sysrevExport(firstQueryIteration,
 <li>If it is included, add <strong><code>incl</code></strong>, followed by two opening brackets (<strong><code>[[</code></strong>) and a list of the relevant variables that were included separated by pipes (<strong><code>|</code></strong>) and terminated by two closing brackets (<strong><code>]]</code></strong>), such as <code>incl [[ supporting audience size | distance from home city ]]</code></li>
 </ul>
 <p>So once JabRef is opened, when screening, make sure that the ‘screening1’ field is shown in the entry table (i.e. that it is one of the entry table columns), and create one entry editing tab using ‘General Fields’ that contains the fields <code>title</code>, <code>abstract</code>, and <code>screening1</code>. You can then use this tab for the screening. It is also convenient to show field <code>dupl</code> in either the entry table or the screening tab in the entry editor, because for duplicate records (that were identified as such - the algorithm may miss some duplicates of course), that field contains the text <code>dupl</code>.</p>
+<p>Make sure to save the database with query hits under a different name than “2018-05-14-screening.bib”. That is important because file “2018-05-14-screening.bib” will get overwritten if this R Markdown file is executed again.</p>
 </div>
 
 

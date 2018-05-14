@@ -72,7 +72,7 @@ sysrevExport(firstQueryIteration,
 
 ```
 
-The merged list of query hits has now been exported to file "2018-05-14-screening.bibtex" in directory "screening" and can be opened using JabRef, which can be downloaded from https://www.fosshub.com/JabRef.html.
+The merged list of query hits has now been exported to file "2018-05-14-screening.bib" in directory "screening" and can be opened using JabRef, which can be downloaded from https://www.fosshub.com/JabRef.html.
 
 In JabRef, open the 'Options' drop-down menu and select 'General Fields' to configure which fields are available in the different tabs when opening an entry. To change the fields that are visible in the overview table of all references, open the 'Options' drop-down menu als select 'Preferences', then edit the 'Entry table columns'.
 
@@ -86,3 +86,4 @@ Note that in bibtex (and therefore JabRef), you can create new fields on the fly
 
 So once JabRef is opened, when screening, make sure that the 'screening1' field is shown in the entry table (i.e. that it is one of the entry table columns), and create one entry editing tab using 'General Fields' that contains the fields `title`, `abstract`, and `screening1`. You can then use this tab for the screening. It is also convenient to show field `dupl` in either the entry table or the screening tab in the entry editor, because for duplicate records (that were identified as such - the algorithm may miss some duplicates of course), that field contains the text `dupl`.
 
+Make sure to save the database with query hits under a different name than "2018-05-14-screening.bib". That is important because file "2018-05-14-screening.bib" will get overwritten if this R Markdown file is executed again.
