@@ -72,11 +72,31 @@ sysrevExport(firstQueryIteration,
 
 ```
 
-The merged list of query hits has now been exported to file "2018-05-14-screening.bib" in directory "screening" and can be opened using JabRef, which can be downloaded from https://www.fosshub.com/JabRef.html.
+The merged list of query hits has now been exported to file `2018-05-14-screening.bib` in directory "screening" and can be opened using JabRef, which can be downloaded from https://www.fosshub.com/JabRef.html.
 
-In JabRef, open the 'Options' drop-down menu and select 'General Fields' to configure which fields are available in the different tabs when opening an entry. To change the fields that are visible in the overview table of all references, open the 'Options' drop-down menu als select 'Preferences', then edit the 'Entry table columns'.
+## JabRef configuration
 
-Note that in bibtex (and therefore JabRef), you can create new fields on the fly. In this case, use field 'screening1' for screening the hits of this first screening iteration. For every entry, add the following text in the 'screening' field:
+When opening a bibliographic library (i.e. a file with the extension `.bib`) in JabRef, it will show the entry table, which is a convenient way to inspect all entries (hits, references, articles, etc) in the library. To prepare JabRef for screening, two settings are important.
+
+First, to change the fields that are visible in the overview table of all references (i.e. the entry table), open the 'Options' drop-down menu and select 'Preferences'. In the preferences dialog, open the 'Entry table columns' section:
+
+![Screenshot of JabRef preferences dialog when the 'Entry table columns' section is opened.](img/jabref--preferences--entry-table-columns.png)
+
+There, the columns shown in the entry table can be edited in the 'Entry table columns' sections. A bit confusingly, this is done by adding *rows* in the table shown in this dialog. Each 'row' in this table represents a column in the entry table.
+
+Note that in bibtex (and therefore JabRef), you can create new fields on the fly. In this case, use field 'screening1' for screening the hits of this first screening iteration: simply add this field name as a 'row' (column) in the entry table. This will show, for every entry, the contents of that field (if it has any).
+
+Second, you need to be able to edit the content in that field. The entry table is very convenient to maintain an overview of the entries in the database, but cannot be used for editing. To edit an entry, double click it in the entry tabel. This opens the entry editor, which has a number of tabs. Each tab shows a number of fields which can then be edited.
+
+These tabs can be configured by setting the 'General fields'. Open the 'Options' drop-down menu and select 'General Fields' to configure which fields are available in the different tabs when opening an entry. 
+
+![Screenshot of JabRef dialog used to set the general fields.](img/jabref--set-general-fields.png)
+
+Add a dedicated field for the reviewing, showing only the title, abstract, and `screening1` fields. This allows you to focus on the relevant information while ignoring irrelevant and potentially biasing information (such as year, journal, and authors).
+
+## Screening process
+
+For every entry, add the following text in the 'screening' field:
 
 - If it is excluded, add the reason, specifically (these are ordered progressively; i.e. if one of the criteria matches, apply it and move on to the next entry):
     - **`nohome`** if the study does not deal with the home advantage;
