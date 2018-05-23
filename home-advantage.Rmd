@@ -23,7 +23,7 @@ screeningPath <- here::here("screening");
 
 ```
 
-## First query run: 2018-05-14
+## First query, executed at: 2018-05-14
 
 The first query is:
 
@@ -109,3 +109,87 @@ For every entry, add the following text in the 'screening' field:
 So once JabRef is opened, when screening, make sure that the 'screening1' field is shown in the entry table (i.e. that it is one of the entry table columns), and create one entry editing tab using 'General Fields' that contains the fields `title`, `abstract`, and `screening1`. You can then use this tab for the screening. It is also convenient to show field `dupl` in either the entry table or the screening tab in the entry editor, because for duplicate records (that were identified as such - the algorithm may miss some duplicates of course), that field contains the text `dupl`.
 
 Make sure to save the database with query hits under a different name than "2018-05-14-screening.bib". That is important because file "2018-05-14-screening.bib" will get overwritten if this R Markdown file is executed again.
+
+## Second query, executed at: 2018-05-23
+
+The query was updated to:
+
+```
+("Home advantage" OR "home court advantage" OR "home team advantage" OR "home venue advantage" OR "home field advantage" OR "game location") AND ("soccer" OR "football") NOT ("American Football" OR "Australian football") 
+```
+
+This was run at 2018-05-23 in PubMed (61 hits) and PsycINFO accessed through EbscoHost (72 hits), and exported to the RIS format (called 'medline' in PubMed). The RIS files were then imported in R using `metabefor`.
+
+```{r echo=TRUE}
+
+### Import PsycINFO hits
+secondQueryIteration_psycinfo <-
+  importRISlike(file.path(queryHitExportPath,
+                          "psycinfo-2018-05-23.ris"),
+                encoding="native.enc");
+
+### Import PubMed hits
+secondQueryIteration_pubmed <-
+  importRISlike(file.path(queryHitExportPath,
+                          "pubmed-2018-05-23.ris"));
+
+### Merge the two sets of hits
+secondQueryIteration <-
+  findDuplicateReferences(primaryRefs = secondQueryIteration_psycinfo,
+                          secondaryRefs = secondQueryIteration_pubmed,
+                          duplicateFieldValue = "dupl (2nd)",
+                          newRecordValue = "PubMed (2nd)",
+                          duplicateValue = "duplicate (both PsycINFO and PubMed; 2nd)",
+                          originalValue = "PsycINFO (2nd)");
+
+### Generate bibtex keys
+secondQueryIteration$output$records <-
+  generateBibtexkeys(secondQueryIteration$output$records);
+
+### Add query date identifier to bibtex keys
+secondQueryIteration$output$records$bibtexkey <-
+  paste0(secondQueryIteration$output$records$bibtexkey,
+         "-20180523");
+
+### Import results from first query (these have been screened now)
+firstQueryIteration_screened <-
+  importBibtex(file.path(screeningPath,
+                         "2018-05-14-screening#1.bib"));
+
+### Merge the screened reference database from the first query
+### with the database from the second query
+secondQueryIteration_merged <-
+  findDuplicateReferences(primaryRefs = firstQueryIteration_screened,
+                          secondaryRefs = secondQueryIteration,
+                          duplicateFieldValue = "Screened in first iteration",
+                          newRecordValue = "From second query",
+                          duplicateValue = "From first query (screened in first iteration)",
+                          originalValue = "screening1");
+
+### The new records are stored in secondQueryIteration_merged$output$newRecords, so we
+### can copy these to the database from the first screening. We also store the entire
+### database so that we can document the process (and if need be, check whether anything
+### went wrong).
+
+secondScreening <- firstQueryIteration_screened;
+
+secondScreening$output$records <- rbind.fill(secondScreening$output$records,
+                                             secondQueryIteration_merged$output$newRecords);
+
+### Export the hits to bibtex for screening in JabRef
+sysrevExport(secondQueryIteration_merged,
+             filename=file.path(screeningPath,
+                                "2018-05-23-fully-merged-database.bib"),
+             screeningType="screening");
+
+sysrevExport(secondScreening,
+             filename=file.path(screeningPath,
+                                "2018-05-23-screening.bib"),
+             screeningType="screening");
+
+```
+
+The merged bibliographic database has been stored in the screening path (`r screeningPath`), to file `2018-05-23-screening.bib`. This file can now be opened in JabRef, and should be saved to a different filename before any edits are made (because, after all, the file named `2018-05-23-screening.bib` will be overwritten every time this script runs).
+
+In this merged database, field 'screening1' has been preserved. Records where this field is empty, therefore, are from the second query, and should be screened in the second screening sweep.
+
