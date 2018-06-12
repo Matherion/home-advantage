@@ -6,11 +6,24 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+########################################################################
 ### Load packages
-require('userfriendlyscience');
+########################################################################
+
+require('userfriendlyscience');  ### For convenience functions, e.g. 'safeRequire'
+safeRequire('here');             ### To easily access files using 'relative paths'
+safeRequire('plyr');             ### For easily processing and restructuring data
+safeRequire("googlesheets");     ### To import data from google sheets in metabefor
+safeRequire('jsonlite');         ### To import a list of country codes in metabefor
+safeRequire('data.tree');        ### To work with data structured in a tree in metabefor
+safeRequire('devtools');         ### To install metabefor from github repo
+                                 ### ... Which we then do here:
+devtools::install_github("Matherion/metabefor");
 require('metabefor');
-safeRequire('here');
-safeRequire('plyr');
+
+########################################################################
+### Settings
+########################################################################
 
 ### By default hide R code
 knitr::opts_chunk$set(echo = FALSE);
@@ -20,6 +33,9 @@ queryHitExportPath <- here::here("queries");
 
 ### Set path for screening
 screeningPath <- here::here("screening");
+
+### Set path for extraction script template
+extractionScriptTemplatePath <- here::here("extraction");
 
 ```
 
@@ -193,3 +209,31 @@ The merged bibliographic database has been stored in the screening path (`r scre
 
 In this merged database, field 'screening1' has been preserved. Records where this field is empty, therefore, are from the second query, and should be screened in the second screening sweep.
 
+## Generation of the Extraction Script
+
+We will use a metabefor extraction script for the extraction of the data. The idea of this script is to extract the data from the original sources with a minimum of interpretation. The data is extracted into a machine-readable format, which then allows competely transparent further processing and synthesis.
+
+These scripts are generated on the basis of two tables/spreadsheets. The first contains the entities to extract, such as study year, sample size, how variables were operationalised, and associations that were found. The second contains the valid values for each entity, to allow efficiently providing coders with examples, instructions, and to allow easy verification of the input.
+
+```{r extraction-script-generation}
+
+sheetsURL <- paste0("https://docs.google.com/spreadsheets/d/",
+                    "1S14aH6ng7_e9wkNTT4zJZCiWNhAbk5vGLM78OHdFPYE");
+
+valueTemplatesSheet <- "valueTemplates";
+entitiesSheet <- "entities";
+
+rxs_fromSpecifications(gs_url = sheetsURL,
+                       entitiesFilename = file.path(extractionScriptTemplatePath,
+                                                    "entities-local-copy.csv"),
+                       valueTemplatesFilename = file.path(extractionScriptTemplatePath,
+                                                          "valueTemplates-local-copy.csv"),
+                       gs_localBackup = list(entities = file.path(extractionScriptTemplatePath,
+                                                                  "entities-local-copy.csv"),
+                                             valueTemplates= file.path(extractionScriptTemplatePath,
+                                                                       "valueTemplates-local-copy.csv"),
+                                             definitions = NULL),
+                       outputFile = file.path(extractionScriptTemplatePath,
+                                              "extractionScriptTemplate.rxs.Rmd"));
+
+```

@@ -1,0 +1,17 @@
+"identifier","description","default","examples","validation"
+"xdoi","For studies with a DOI, ""doi:"" directly followed by the DOI; for studies without a DOI, the DOI prefix of the publisher (see https://gist.github.com/TomDemeranville/8699224), followed by a slash, followed by the ISSN, followed by a dash, followed by the year of publication, followed by a dash, followed by the starting page. If no DOI prefix can be located, instead use 'NA'.","""enter xdoi here""","""doi:10.18637/jss.v036.i03"" || ""nodoi:10.1111/0965-2140/2003-951"" || ""doi:10.1136/bmj.2.2288.1243""","nchar(xdoi)>10"
+"numeric","Any valid number",NA,"2.3 || 643.2","is.numeric(numeric) && (length(numeric) == 1)"
+"numeric.multi","A vector of valid numbers",NA,"c(23.43, 62) || 52.2 || c(76, 12.56, 42)","is.numeric(numeric)"
+"rawTable","A table of values, used for extracting crosstables",NA,"rawTable(1,2,3,4,5,6, ncol=3)",NA
+"integer","Any valid whole number",NA,"30 || 8762","is.numeric(integer) && (integer%%1==0) && (length(integer) == 1)"
+"integer.multi","A vector of integers (i.e. one or more whole numbers)",NA,"c(23, 62) || 52 || c(76, 12, 42)","is.numeric(integer) && all(integer%%1==0)"
+"integer.length4.multi","A numeric vector of years",NA,"2001 || c(2001, 2002)","is.numeric(integer.length4.multi) && all(nchar(integer.length4.multi)==4)"
+"string","A single character value",NA,"""Example"" || ""Another example""","is.character(string) && length(string) == 1"
+"string.multi","A character vector (i.e. one or more strings)",NA,NA,NA
+"countrycode","A character vector of the ISO 3166-1 alpha-2 country code(s)",NA,"""NL"" || c(""NL"", ""BE"")","countrycode %in% countryCodeList()"
+"categorical","A string that has to exactly match one of the values specified in the ""values"" column of the Coding sheet",NA,"<first two elements of 'validValues' columns are used>","categorical %in% validValues"
+"string.mandatory","A single character value that cannot be omitted","""Enter name here (mandatory)""","""Example"" || ""Another example""","!is.na(string.mandatory) && !is.null(string.mandatory) && (nchar(string.mandatory) > 0)"
+"string.entityRef.mandatory","A string that specifies another entity and which MUST be provided","""enter <<<entityRef>>> here""","<no example>","The extraction script is checked for existence of the referent."
+"string.entityRef.optional","A string that specifies another entity (can be missing, i.e. NA)",NA,"<no example>","The extraction script is checked for existence of the referent, if it is not NA"
+"string.fieldRef.optional","A string that specifies another field in another entity (can be missing, i.e. NA).",NA,"<no example>","The extraction script is checked for existence of the field in the referent entity, if it is not NA"
+"matrix.crosstab","A table with frequencies; variable 1 in columns, variable 2 in rows; always work from absence/negative/less (left, top) to presence/positive/more (right, bottom)",NA,"rawTable(10, 5, 15, 10) || rawTable(31, 87, 21, 54, 25, 32, ncol=3)","is.na(matrix.crosstab) || class(matrix.crosstab) == ""matrix"""
