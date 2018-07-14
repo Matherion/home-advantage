@@ -76,7 +76,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      "enter xdoi here"
+      "10.1080/02640419608727700"
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -115,7 +115,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      NA
+      ""
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -148,7 +148,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      NA
+      1992:1993
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -181,7 +181,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      NA
+      "GB"
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -229,7 +229,7 @@ study <- Node$new('study');
     ### 
     ############################################################################
         
-        NA
+        3291
         
     ############################################################################
     ######################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -263,7 +263,7 @@ study <- Node$new('study');
     ### 
     ############################################################################
         
-        NA
+        "match"
         
     ############################################################################
     ######################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -324,7 +324,7 @@ study <- Node$new('study');
     ### 
     ############################################################################
         
-        NA
+        "quantitative"
         
     ############################################################################
     ######################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -373,10 +373,10 @@ study <- Node$new('study');
       ### 
       ##########################################################################
           
-          list(oper.name = "Enter name here (mandatory)",  ### Variable Name: A unique name (in this study), to be able to refer to this variable later, and to easily find it afterwards [Examples: "Example"; "Another example"] [Value description: A single character value that cannot be omitted]
+          list(oper.name = "homeTeamWinPrc",  ### Variable Name: A unique name (in this study), to be able to refer to this variable later, and to easily find it afterwards [Examples: "Example"; "Another example"] [Value description: A single character value that cannot be omitted]
                oper.moment = 1,                            ### Moment: Moment(s) this variable was measured/manipulated. [Examples: c(23, 62); 52; c(76, 12, 42)] [Value description: A vector of integers (i.e. one or more whole numbers)]
                oper.type = NA,                             ### Type of operationalisation: Whether this variable is a manipulation, a single measurement, or an aggregate [Examples: "manipulation"; "item"; "aggregate"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
-               oper.datatype = NA,                         ### Type of data: "Measurement level" of this operationalisation. [Examples: "numeric"; "logical"; "nominal"; "ordinal"; "string"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
+               oper.datatype = "numeric",                         ### Type of data: "Measurement level" of this operationalisation. [Examples: "numeric"; "logical"; "nominal"; "ordinal"; "string"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
                oper.values = NA,                           ### Values: Possible values this variable can take: only valid for "nominal" or "ordinal" variables. [Examples: c(23, 62); 52; c(76, 12, 42)] [Value description: A vector of integers (i.e. one or more whole numbers)]
                oper.labels = NA,                           ### Labels: Labels for the values. [Examples: c("First value", "Second value")] [Value description: A character vector (i.e. one or more strings)]
                oper.description = "",                      ### Description: A description of this variable (can be more extensive than the name) [Examples: "Example"; "Another example"] [Value description: A single character value]
@@ -397,6 +397,81 @@ study <- Node$new('study');
       ##########################################################################
     
         
+      ##########################################################################
+      ########################################## START: variable (REPEATING) ###
+      ##########################################################################
+      study$methods$operationalisations$AddChild('variable__1__');
+      study$methods$operationalisations$variable__1__[['value']] <-
+      ##########################################################################
+      ### 
+      ### VARIABLE
+      ### 
+      ### A variable and its operationalisation
+      ### 
+      ##########################################################################
+          
+          list(oper.name = "homeTeamRedCard",  ### Variable Name: A unique name (in this study), to be able to refer to this variable later, and to easily find it afterwards [Examples: "Example"; "Another example"] [Value description: A single character value that cannot be omitted]
+               oper.moment = 1,                            ### Moment: Moment(s) this variable was measured/manipulated. [Examples: c(23, 62); 52; c(76, 12, 42)] [Value description: A vector of integers (i.e. one or more whole numbers)]
+               oper.type = NA,                             ### Type of operationalisation: Whether this variable is a manipulation, a single measurement, or an aggregate [Examples: "manipulation"; "item"; "aggregate"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
+               oper.datatype = "numeric",                         ### Type of data: "Measurement level" of this operationalisation. [Examples: "numeric"; "logical"; "nominal"; "ordinal"; "string"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
+               oper.values = NA,                           ### Values: Possible values this variable can take: only valid for "nominal" or "ordinal" variables. [Examples: c(23, 62); 52; c(76, 12, 42)] [Value description: A vector of integers (i.e. one or more whole numbers)]
+               oper.labels = NA,                           ### Labels: Labels for the values. [Examples: c("First value", "Second value")] [Value description: A character vector (i.e. one or more strings)]
+               oper.description = "",                      ### Description: A description of this variable (can be more extensive than the name) [Examples: "Example"; "Another example"] [Value description: A single character value]
+               oper.comment = "");                         ### Comment: Any relevant comments the coder wants to add [Examples: "Example"; "Another example"] [Value description: A single character value]
+          
+      ##########################################################################
+      study$methods$operationalisations$variable__1__[['validation']] <- list(`oper.name` = expression(!is.na(VALUE) && !is.null(VALUE) && (nchar(VALUE) > 0)),
+                                                                              `oper.moment` = expression(is.numeric(VALUE) && all(VALUE%%1==0)),
+                                                                              `oper.type` = expression(VALUE %in% c("manipulation", "item", "aggregate")),
+                                                                              `oper.datatype` = expression(VALUE %in% c("numeric", "logical", "nominal", "ordinal", "string")),
+                                                                              `oper.values` = expression(is.numeric(VALUE) && all(VALUE%%1==0)),
+                                                                              `oper.labels` = expression(is.character(VALUE)),
+                                                                              `oper.description` = expression(is.character(VALUE) && length(VALUE) == 1),
+                                                                              `oper.comment` = expression(is.character(VALUE) && length(VALUE) == 1));
+      study$methods$operationalisations$variable__1__$name <- study$methods$operationalisations$variable__1__$value[[1]];
+      ##########################################################################
+      ############################################ END: variable (REPEATING) ###
+      ##########################################################################
+
+
+
+ ##########################################################################
+      ########################################## START: variable (REPEATING) ###
+      ##########################################################################
+      study$methods$operationalisations$AddChild('variable__1__');
+      study$methods$operationalisations$variable__1__[['value']] <-
+      ##########################################################################
+      ### 
+      ### VARIABLE
+      ### 
+      ### A variable and its operationalisation
+      ### 
+      ##########################################################################
+          
+          list(oper.name = "homePenaltyScored",  ### Variable Name: A unique name (in this study), to be able to refer to this variable later, and to easily find it afterwards [Examples: "Example"; "Another example"] [Value description: A single character value that cannot be omitted]
+               oper.moment = 1,                            ### Moment: Moment(s) this variable was measured/manipulated. [Examples: c(23, 62); 52; c(76, 12, 42)] [Value description: A vector of integers (i.e. one or more whole numbers)]
+               oper.type = NA,                             ### Type of operationalisation: Whether this variable is a manipulation, a single measurement, or an aggregate [Examples: "manipulation"; "item"; "aggregate"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
+               oper.datatype = "numeric",                         ### Type of data: "Measurement level" of this operationalisation. [Examples: "numeric"; "logical"; "nominal"; "ordinal"; "string"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
+               oper.values = NA,                           ### Values: Possible values this variable can take: only valid for "nominal" or "ordinal" variables. [Examples: c(23, 62); 52; c(76, 12, 42)] [Value description: A vector of integers (i.e. one or more whole numbers)]
+               oper.labels = NA,                           ### Labels: Labels for the values. [Examples: c("First value", "Second value")] [Value description: A character vector (i.e. one or more strings)]
+               oper.description = "",                      ### Description: A description of this variable (can be more extensive than the name) [Examples: "Example"; "Another example"] [Value description: A single character value]
+               oper.comment = "");                         ### Comment: Any relevant comments the coder wants to add [Examples: "Example"; "Another example"] [Value description: A single character value]
+          
+      ##########################################################################
+      study$methods$operationalisations$variable__1__[['validation']] <- list(`oper.name` = expression(!is.na(VALUE) && !is.null(VALUE) && (nchar(VALUE) > 0)),
+                                                                              `oper.moment` = expression(is.numeric(VALUE) && all(VALUE%%1==0)),
+                                                                              `oper.type` = expression(VALUE %in% c("manipulation", "item", "aggregate")),
+                                                                              `oper.datatype` = expression(VALUE %in% c("numeric", "logical", "nominal", "ordinal", "string")),
+                                                                              `oper.values` = expression(is.numeric(VALUE) && all(VALUE%%1==0)),
+                                                                              `oper.labels` = expression(is.character(VALUE)),
+                                                                              `oper.description` = expression(is.character(VALUE) && length(VALUE) == 1),
+                                                                              `oper.comment` = expression(is.character(VALUE) && length(VALUE) == 1));
+      study$methods$operationalisations$variable__1__$name <- study$methods$operationalisations$variable__1__$value[[1]];
+      ##########################################################################
+      ############################################ END: variable (REPEATING) ###
+      ##########################################################################
+
+
     ############################################################################
     ############################################### END: operationalisations ###
     ############################################################################
@@ -433,11 +508,11 @@ study <- Node$new('study');
     ### 
     ############################################################################
         
-        list(assoc.name = "Enter name here (mandatory)",  ### Name of result: A unique name (in this study), to easily find / meta-analyse / group this result later [Examples: "mainHypothesisTest"; "manipulationCheck"] [Value description: A single character value that cannot be omitted]
-             assoc.var1name = "enter oper.name here",     ### First variable: The name of the first variable. [Examples: <no example>] [Value description: A string that specifies another entity and which MUST be provided]
+        list(assoc.name = "homeTeamWinPrc_homeTeamRedCard",  ### Name of result: A unique name (in this study), to easily find / meta-analyse / group this result later [Examples: "mainHypothesisTest"; "manipulationCheck"] [Value description: A single character value that cannot be omitted]
+             assoc.var1name = "homeTeamWinPrc",     ### First variable: The name of the first variable. [Examples: <no example>] [Value description: A string that specifies another entity and which MUST be provided]
              assoc.var1values = NA,                       ### Values of first variable: Values this variable pertains to (e.g. in post hoc analyses). [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
              assoc.var1moment = NA,                       ### Measurement moment of first variable: To which measurement moment of the first variable this association pertains. [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
-             assoc.var2name = "enter oper.name here",     ### Second variable: The name of the second variable. [Examples: <no example>] [Value description: A string that specifies another entity and which MUST be provided]
+             assoc.var2name = "homeTeamRedCard",     ### Second variable: The name of the second variable. [Examples: <no example>] [Value description: A string that specifies another entity and which MUST be provided]
              assoc.var2values = NA,                       ### Values of second variable: Values this variable pertains to (e.g. in post hoc analyses). [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
              assoc.var2moment = NA,                       ### Measurement moment of second variable: To which measurement moment of the second variable this association pertains. [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
              assoc.subsample = NA,                        ### Subsample: If applicable, the subsample this result pertains to. [Examples: <no example>] [Value description: A string that specifies another entity (can be missing, i.e. NA)]
@@ -445,7 +520,7 @@ study <- Node$new('study');
              assoc.df = NA,                               ### Degrees of freedom: This can be used to specify the degrees of freedom for this analysis, in case for example a t or an F value is extracted. [Examples: c(23.43, 62); 52.2; c(76, 12.56, 42)] [Value description: A vector of valid numbers]
              assoc.t = NA,                                ### t value: The t value of this association. [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.F = NA,                                ### F value: The F value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
-             assoc.r = NA,                                ### Pearson r: The bivariate correlation of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.r = -.85,                                ### Pearson r: The bivariate correlation of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.z = NA,                                ### Z value: The Z value of this association. [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.chisq = NA,                            ### Chi square: The chi squared value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.crosstab = NA,                         ### Raw table: A table with the frequencies [Examples: rawTable(10, 5, 15, 10); rawTable(31, 87, 21, 54, 25, 32, ncol=3)] [Value description: A table with frequencies; variable 1 in columns, variable 2 in rows; always work from absence/negative/less (left, top) to presence/positive/more (right, bottom)]
@@ -487,6 +562,73 @@ study <- Node$new('study');
     ############################################################################
   
   
+    ############################################################################
+    ######################################### START: association (REPEATING) ###
+    ############################################################################
+    study$results$AddChild('association__1__');
+    study$results$association__1__[['value']] <-
+    ############################################################################
+    ### 
+    ### ASSOCIATION
+    ### 
+    ### An association between two variables.
+    ### 
+    ############################################################################
+        
+        list(assoc.name = "homeTeamWinPrc_homeTeamPenaltyScored",  ### Name of result: A unique name (in this study), to easily find / meta-analyse / group this result later [Examples: "mainHypothesisTest"; "manipulationCheck"] [Value description: A single character value that cannot be omitted]
+             assoc.var1name = "homeTeamWinPrc",     ### First variable: The name of the first variable. [Examples: <no example>] [Value description: A string that specifies another entity and which MUST be provided]
+             assoc.var1values = NA,                       ### Values of first variable: Values this variable pertains to (e.g. in post hoc analyses). [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
+             assoc.var1moment = NA,                       ### Measurement moment of first variable: To which measurement moment of the first variable this association pertains. [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
+             assoc.var2name = "homeTeamPenaltyScored",     ### Second variable: The name of the second variable. [Examples: <no example>] [Value description: A string that specifies another entity and which MUST be provided]
+             assoc.var2values = NA,                       ### Values of second variable: Values this variable pertains to (e.g. in post hoc analyses). [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
+             assoc.var2moment = NA,                       ### Measurement moment of second variable: To which measurement moment of the second variable this association pertains. [Examples: <no example>] [Value description: A string that specifies another field in another entity (can be missing, i.e. NA).]
+             assoc.subsample = NA,                        ### Subsample: If applicable, the subsample this result pertains to. [Examples: <no example>] [Value description: A string that specifies another entity (can be missing, i.e. NA)]
+             assoc.n = NA,                                ### Sample size: This can be used to specify the sample size, if it is different from the sample size of the entire sample or the relevant subsample. [Examples: 30; 8762] [Value description: Any valid whole number]
+             assoc.df = NA,                               ### Degrees of freedom: This can be used to specify the degrees of freedom for this analysis, in case for example a t or an F value is extracted. [Examples: c(23.43, 62); 52.2; c(76, 12.56, 42)] [Value description: A vector of valid numbers]
+             assoc.t = NA,                                ### t value: The t value of this association. [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.F = NA,                                ### F value: The F value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.r = -.85,                                ### Pearson r: The bivariate correlation of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.z = NA,                                ### Z value: The Z value of this association. [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.chisq = NA,                            ### Chi square: The chi squared value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.crosstab = NA,                         ### Raw table: A table with the frequencies [Examples: rawTable(10, 5, 15, 10); rawTable(31, 87, 21, 54, 25, 32, ncol=3)] [Value description: A table with frequencies; variable 1 in columns, variable 2 in rows; always work from absence/negative/less (left, top) to presence/positive/more (right, bottom)]
+             assoc.d = NA,                                ### Cohen's d: The Cohen's d value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.etasq = NA,                            ### Eta squared: The eta squared value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.omegasq = NA,                          ### Omega squared: The omega squared value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.OR = NA,                               ### Odds Ratio: The odds ratio of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.p = NA,                                ### p value: The association's p value (only extract if nothing else is available) [Examples: 2.3; 643.2] [Value description: Any valid number]
+             assoc.covariates = NA,                       ### Covariates: Number of covariates (for multivariate analyses). [Examples: 30; 8762] [Value description: Any valid whole number]
+             assoc.comment = NA);                         ### Comment: Any relevant comments the coder wants to add [Examples: "Example"; "Another example"] [Value description: A single character value]
+        
+    ############################################################################
+    study$results$association__1__[['validation']] <- list(`assoc.name` = expression(!is.na(VALUE) && !is.null(VALUE) && (nchar(VALUE) > 0)),
+                                                           `assoc.var1name` = expression(TRUE),
+                                                           `assoc.var1values` = expression(TRUE),
+                                                           `assoc.var1moment` = expression(TRUE),
+                                                           `assoc.var2name` = expression(TRUE),
+                                                           `assoc.var2values` = expression(TRUE),
+                                                           `assoc.var2moment` = expression(TRUE),
+                                                           `assoc.subsample` = expression(TRUE),
+                                                           `assoc.n` = expression(is.numeric(VALUE) && (VALUE%%1==0) && (length(VALUE) == 1)),
+                                                           `assoc.df` = expression(is.numeric(VALUE)),
+                                                           `assoc.t` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.F` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.r` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.z` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.chisq` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.crosstab` = expression(is.na(VALUE) || class(VALUE) == "matrix"),
+                                                           `assoc.d` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.etasq` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.omegasq` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.OR` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.p` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
+                                                           `assoc.covariates` = expression(is.numeric(VALUE) && (VALUE%%1==0) && (length(VALUE) == 1)),
+                                                           `assoc.comment` = expression(is.character(VALUE) && length(VALUE) == 1));
+    study$results$association__1__$name <- study$results$association__1__$value[[1]];
+    ############################################################################
+    ########################################### END: association (REPEATING) ###
+    ############################################################################
+  
+
     ############################################################################
     ########################################## START: univariate (REPEATING) ###
     ############################################################################

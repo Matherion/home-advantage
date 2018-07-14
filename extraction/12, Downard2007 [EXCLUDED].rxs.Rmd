@@ -1,6 +1,6 @@
 ---
 title: "Systematic Review Extraction Script Template"
-date: "26 Jun 2018 at 16:07:01"
+date: "20 Jun 2018 at 17:30:47"
 output:
   html_document:
     self-contained: yes
@@ -16,23 +16,18 @@ if (!require('userfriendlyscience')) {
   require('userfriendlyscience');
 }
 
-### Other packages
+### The a number of other packages
 safeRequire('googlesheets');     ### To import data from google sheets in metabefor
 safeRequire('jsonlite');         ### To import a list of country codes in metabefor
 safeRequire('data.tree');        ### To work with data structured in a tree in metabefor
-safeRequire('pander');           ### To print the dataframe with results in a nice way
 safeRequire('devtools');         ### To install metabefor from github repo
                                  ### ... Which we then do here:
 devtools::install_github('Matherion/metabefor', quiet=TRUE);
 require('metabefor');            ### ... After which we load it
 
-### Settings
-knitr::opts_chunk$set(echo = FALSE);             ### Suppress R command printing
-knitr::opts_chunk$set(comment=NA);               ### Suppress output prefix
-pander::panderOptions('table.split.table', Inf); ### Disable table splitting
 ```
 
-```{r fieldname-chunk}
+```{r fieldname-chunk, echo=FALSE}
 eC <- list(titleCol="title",
            descriptionCol="description",
            identifierCol="identifier",
@@ -76,7 +71,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      "enter xdoi here"
+      "10.1080/02640410701275193"
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -115,7 +110,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      NA
+      ""
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -148,7 +143,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      NA
+      1996:2002
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -181,7 +176,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      NA
+      "GB"
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -229,7 +224,7 @@ study <- Node$new('study');
     ### 
     ############################################################################
         
-        NA
+        857
         
     ############################################################################
     ######################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -297,14 +292,14 @@ study <- Node$new('study');
     ### 
     ############################################################################
         
-        list(subsample.name = "Enter name here (mandatory)",  ### Name: A unique name (in this study), to be able to refer to this subsample later, and to easily find it afterwards [Examples: "Example"; "Another example"] [Value description: A single character value that cannot be omitted]
-             subsample.N = NA,                                ### Size: Sample size of subsample [Examples: 30; 8762] [Value description: Any valid whole number]
-             subsample.Ntype = NA);                           ### Sample size type: Whether the sample size counts the number of persons or the number of matches [Examples: "person"; "match"; "season"] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
+        list(subsample.name = "Enter name here (mandatory)",  ### Name: A unique name (in this study), to be able to refer to this subsample later, and to easily find it afterwards [Examples: "Example"] [Value description: A single character value that cannot be omitted]
+             subsample.N = NA,                                ### Size: Sample size of subsample [Examples: "Another example"] [Value description: Any valid whole number]
+             subsample.Ntype = NA);                           ### Sample size type: Whether the sample size counts the number of persons or the number of matches [Examples: 30] [Value description: A string that has to exactly match one of the values specified in the "values" column of the Coding sheet]
         
     ############################################################################
     study$methods$subsample__1__[['validation']] <- list(`subsample.name` = expression(!is.na(VALUE) && !is.null(VALUE) && (nchar(VALUE) > 0)),
                                                          `subsample.N` = expression(is.numeric(VALUE) && (VALUE%%1==0) && (length(VALUE) == 1)),
-                                                         `subsample.Ntype` = expression(VALUE %in% c("person", "match", "season")));
+                                                         `subsample.Ntype` = expression(VALUE %in% c("person", "match")));
     study$methods$subsample__1__$name <- study$methods$subsample__1__$value[[1]];
     ############################################################################
     ############################################# END: subsample (REPEATING) ###
@@ -324,7 +319,7 @@ study <- Node$new('study');
     ### 
     ############################################################################
         
-        NA
+        "quantitative"
         
     ############################################################################
     ######################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -446,7 +441,6 @@ study <- Node$new('study');
              assoc.t = NA,                                ### t value: The t value of this association. [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.F = NA,                                ### F value: The F value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.r = NA,                                ### Pearson r: The bivariate correlation of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
-             assoc.z = NA,                                ### Z value: The Z value of this association. [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.chisq = NA,                            ### Chi square: The chi squared value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
              assoc.crosstab = NA,                         ### Raw table: A table with the frequencies [Examples: rawTable(10, 5, 15, 10); rawTable(31, 87, 21, 54, 25, 32, ncol=3)] [Value description: A table with frequencies; variable 1 in columns, variable 2 in rows; always work from absence/negative/less (left, top) to presence/positive/more (right, bottom)]
              assoc.d = NA,                                ### Cohen's d: The Cohen's d value of this association [Examples: 2.3; 643.2] [Value description: Any valid number]
@@ -471,7 +465,6 @@ study <- Node$new('study');
                                                            `assoc.t` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
                                                            `assoc.F` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
                                                            `assoc.r` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
-                                                           `assoc.z` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
                                                            `assoc.chisq` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
                                                            `assoc.crosstab` = expression(is.na(VALUE) || class(VALUE) == "matrix"),
                                                            `assoc.d` = expression(is.numeric(VALUE) && (length(VALUE) == 1)),
@@ -484,33 +477,6 @@ study <- Node$new('study');
     study$results$association__1__$name <- study$results$association__1__$value[[1]];
     ############################################################################
     ########################################### END: association (REPEATING) ###
-    ############################################################################
-  
-  
-    ############################################################################
-    ########################################## START: univariate (REPEATING) ###
-    ############################################################################
-    study$results$AddChild('univariate__1__');
-    study$results$univariate__1__[['value']] <-
-    ############################################################################
-    ### 
-    ### UNIVARIATE
-    ### 
-    ### A univariate result, e.g. a quote in a qualitative study
-    ### 
-    ############################################################################
-        
-        list(uni.name = "Enter name here (mandatory)",  ### Name of result: A unique name (in this study), to easily find / meta-analyse / group this result later [Examples: "Example"; "Another example"] [Value description: A single character value that cannot be omitted]
-             uni.varname = "enter  here",               ### Name of variable: The variable this result pertains to. [Examples: <no example>] [Value description: A string that specifies another entity and which MUST be provided]
-             uni.qualitative = NA);                     ### Qualitative observation: A quote of a participant in a qualitative study or an observation by the authors in a qualitative study. [Examples: "Example"; "Another example"] [Value description: A single character value]
-        
-    ############################################################################
-    study$results$univariate__1__[['validation']] <- list(`uni.name` = expression(!is.na(VALUE) && !is.null(VALUE) && (nchar(VALUE) > 0)),
-                                                          `uni.varname` = expression(TRUE),
-                                                          `uni.qualitative` = expression(is.character(VALUE) && length(VALUE) == 1));
-    study$results$univariate__1__$name <- study$results$univariate__1__$value[[1]];
-    ############################################################################
-    ############################################ END: univariate (REPEATING) ###
     ############################################################################
   
       
@@ -532,7 +498,7 @@ study <- Node$new('study');
   ### 
   ##############################################################################
       
-      NA
+      857
       
   ##############################################################################
   ########################################### VALUE DESCRIPTION AND EXAMPLES ###
@@ -558,20 +524,15 @@ study <- Node$new('study');
 class(study) <- c('rxs', class(study));
 ```
 
-```{r show-extracted-data-chunk, results='asis'}
+```{r show-extracted-data-chunk, echo=FALSE}
 print.rxs(study);
 ```
 
-```{r validation-chunk, results='asis'}
+```{r validation-chunk, echo=FALSE}
 rxs_validation(study);
-cat0("\n\n### Validation results\n\n");
 #rxs_validation(study,
 #               rxsStructure = fullResults$rxsStructure);
-if (length(study$validationResults) > 2) {
-  cat(paste0('- ', study$validationResults), sep='
+cat(study$validationResults, sep='
 ');
-} else {
-  cat('Validation successful!');
-}
 ```
 

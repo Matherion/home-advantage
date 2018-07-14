@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%H:%M:%S on %Y-%m-%d %Z (GMT%z)')`"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup-chunk, include=FALSE}
 ########################################################################
 ### Load packages
 ########################################################################
@@ -15,6 +15,7 @@ safeRequire('here');             ### To easily access files using 'relative path
 safeRequire('plyr');             ### For easily processing and restructuring data
 safeRequire("googlesheets");     ### To import data from google sheets in metabefor
 safeRequire('jsonlite');         ### To import a list of country codes in metabefor
+safeRequire('readxl');           ### To read Excel files
 safeRequire('data.tree');        ### To work with data structured in a tree in metabefor
 safeRequire('devtools');         ### To install metabefor from github repo
                                  ### ... Which we then do here:
@@ -36,6 +37,10 @@ screeningPath <- here::here("screening");
 
 ### Set path for extraction script template
 extractionScriptTemplatePath <- here::here("extraction");
+extractionScriptsPath <- extractionScriptTemplatePath;
+
+### Working path
+workingPath <- here::here("output");
 
 ```
 
@@ -217,23 +222,183 @@ These scripts are generated on the basis of two tables/spreadsheets. The first c
 
 ```{r extraction-script-generation}
 
-sheetsURL <- paste0("https://docs.google.com/spreadsheets/d/",
-                    "1S14aH6ng7_e9wkNTT4zJZCiWNhAbk5vGLM78OHdFPYE");
-
-valueTemplatesSheet <- "valueTemplates";
-entitiesSheet <- "entities";
-
-rxs_fromSpecifications(gs_url = sheetsURL,
-                       entitiesFilename = file.path(extractionScriptTemplatePath,
-                                                    "entities-local-copy.csv"),
-                       valueTemplatesFilename = file.path(extractionScriptTemplatePath,
-                                                          "valueTemplates-local-copy.csv"),
-                       gs_localBackup = list(entities = file.path(extractionScriptTemplatePath,
-                                                                  "entities-local-copy.csv"),
-                                             valueTemplates= file.path(extractionScriptTemplatePath,
-                                                                       "valueTemplates-local-copy.csv"),
-                                             definitions = NULL),
-                       outputFile = file.path(extractionScriptTemplatePath,
-                                              "extractionScriptTemplate.rxs.Rmd"));
+# sheetsURL <- paste0("https://docs.google.com/spreadsheets/d/",
+#                     "1S14aH6ng7_e9wkNTT4zJZCiWNhAbk5vGLM78OHdFPYE");
+# 
+# valueTemplatesSheet <- "valueTemplates";
+# entitiesSheet <- "entities";
+# 
+# rxs_fromSpecifications(gs_url = sheetsURL,
+#                        entitiesFilename = file.path(extractionScriptTemplatePath,
+#                                                     "entities-local-copy.csv"),
+#                        valueTemplatesFilename = file.path(extractionScriptTemplatePath,
+#                                                           "valueTemplates-local-copy.csv"),
+#                        localBackup = list(entities = file.path(extractionScriptTemplatePath,
+#                                                                "entities-local-copy.csv"),
+#                                           valueTemplates= file.path(extractionScriptTemplatePath,
+#                                                                     "valueTemplates-local-copy.csv"),
+#                                           definitions = NULL),
+#                        outputFile = file.path(extractionScriptTemplatePath,
+#                                               "extractionScriptTemplate.rxs.Rmd"));
 
 ```
+
+The completed extraction scripts are then read into R.
+
+```{r extraction-script-parsing, results="asis", messages=FALSE, warning=FALSE}
+
+rxs <- rxs_parseExtractionScripts(extractionScriptsPath);
+
+cat("\n\n# Extraction script output {.tabset}\n\n");
+
+for (currentFile in names(rxs$rxsOutput)) {
+  cat("\n\n## ", currentFile, "\n\n");
+  cat0(rxs$rxsOutput[[currentFile]], sep="\n");
+}
+
+### Get list of opeationalisations
+operationalisations <- rxs_get_values(rxs,
+                                      'oper.name');
+
+operationalisations <- data.frame(study = names(operationalisations),
+                                  operationalisation = operationalisations);
+
+operationalisations$study <- gsub("(.*).rxs.Rmd.*", "\\1", operationalisations$study);
+
+row.names(operationalisations) <- NULL;
+
+write.csv(operationalisations,
+          file.path(workingPath, "operationalisations.csv"));
+
+```
+
+# Results
+
+## The full initial list of extracted operationalisations {.tabset}
+
+### Description
+
+In total, `r nrow(operationalisations)` operationalisations were extracted. View the second tab in this section to see them all.
+
+### Full list
+
+```{r operationalisations-original}
+operationalisations;
+```
+
+## Merged operationalisations
+
+These operationalisations were then aggregated into overarching categories.
+
+```{r operationalisations-categorized}
+
+operationalisations_categorized <-
+  read_excel(file.path(workingPath, "operationalisations_scriptie_excel.xlsx"),
+             sheet=2, skip=2);
+
+operationalisations_categorized <-
+  as.data.frame(operationalisations_categorized[, -1]);
+
+names(operationalisations_categorized) <- c('study', 'operationalisations', 'category1', 'category2');
+
+
+```
+
+## A full list of all extracted entities 
+
+```{r all-extracted-entities}
+
+rxs_extractedListEntities(rxs$rxsTrees);
+
+```
+
+## Effect size aggregation
+
+The effect sizes were then aggregated. Within the results entity, the following entities were extracted (and with this frequency):
+
+```{r all-extracted-effect-sizes}
+count(rxs_extractedListEntities(rxs, withinEntity='results')$entity);
+```
+
+Thus, of all effect sizes, it seems like the correlation coefficient was the most common. We will therefore choose the correlation coefficient as basic effect size, and convert all other effect sizes to Pearson's *r*.
+
+```{r aggregate-effect-sizes}
+
+### First, we process the Cohen's d values using convert.d.to.r
+### We will assume we have only one group size for now, and only
+### specify n1
+invisible(lapply(rxs$rxsTrees, function(node) {
+  node$Do(function(nd) {
+    ### First check whether r is missing but d is present
+    if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
+        (!is.null(nd$value$assoc.d) && !is.na(nd$value$assoc.d))) {
+      ### Then check which value for n we will use
+      if (is.null(nd$value$assoc.n) || is.na(nd$value$assoc.n)) {
+        if (is.null(nd$value$assoc.subsample) || is.na(nd$value$assoc.subsample)) {
+          ### Use general study n
+          n <- nd$root$methods$N$value;
+        } else {
+          ### Use n from a subsample
+          n <- FindNode(node=node$root,
+                        name=nd$value$assoc.subsample)$value$subsample.N;
+        }
+      } else {
+        ### Use n specified for this analysis
+        n <- nd$value$assoc.n;
+      }
+      ### Convert d to r and store it
+      nd$value$assoc.r <- convert.d.to.r(d = nd$value$assoc.d,
+                                         n1 = n);
+    }
+  }, filterFun=function(nd) {
+    ### Only get lists from the results
+    return(('results' %IN% nd$path) &&
+           ('value' %IN% nd$fields) &&
+           (is.list(nd$value)));
+  });
+}));
+
+### Next up: converting chi squared to V (which is basically r)
+invisible(lapply(rxs$rxsTrees, function(node) {
+  node$Do(function(nd) {
+    ### First check whether r is missing but d is present
+    if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
+        (!is.null(nd$value$assoc.V) && !is.na(nd$value$assoc.V))) {
+      ### Convert V to r and store it
+      
+      
+      
+      
+      
+      
+      nd$value$assoc.r <- convert.V.to.r(V = nd$value$assoc.V);
+    }
+  }, filterFun=function(nd) {
+    ### Only get lists from the results
+    return(('results' %IN% nd$path) &&
+           ('value' %IN% nd$fields) &&
+           (is.list(nd$value)));
+  });
+}));
+
+### Next up: converting eta squared (which is basically r)
+invisible(lapply(rxs$rxsTrees, function(node) {
+  node$Do(function(nd) {
+    ### First check whether r is missing but d is present
+    if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
+        (!is.null(nd$value$assoc.V) && !is.na(nd$value$assoc.V))) {
+      ### Convert V to r and store it
+      nd$value$assoc.r <- convert.V.to.r(V = nd$value$assoc.V);
+    }
+  }, filterFun=function(nd) {
+    ### Only get lists from the results
+    return(('results' %IN% nd$path) &&
+           ('value' %IN% nd$fields) &&
+           (is.list(nd$value)));
+  });
+}));
+
+
+```
+
+
