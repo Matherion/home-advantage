@@ -2,7 +2,9 @@
 title: "Home Advantage Literature Synthesis"
 author: "Gjalt-Jorn Peters & Tim Vincken"
 date: "`r format(Sys.time(), '%H:%M:%S on %Y-%m-%d %Z (GMT%z)')`"
-output: html_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup-chunk, include=FALSE}
@@ -17,6 +19,8 @@ safeRequire("googlesheets");     ### To import data from google sheets in metabe
 safeRequire('jsonlite');         ### To import a list of country codes in metabefor
 safeRequire('readxl');           ### To read Excel files
 safeRequire('data.tree');        ### To work with data structured in a tree in metabefor
+safeRequire('metafor');          ### For the meta-analysis
+safeRequire('ggplot2');          ### For saving plots
 safeRequire('devtools');         ### To install metabefor from github repo
                                  ### ... Which we then do here:
 devtools::install_github("Matherion/metabefor");
@@ -249,6 +253,9 @@ The completed extraction scripts are then read into R.
 
 rxs <- rxs_parseExtractionScripts(extractionScriptsPath);
 
+names(rxs$rxsTrees) <-
+  gsub("(.*).rxs.Rmd.*", "\\1", names(rxs$rxsTrees));
+
 cat("\n\n# Extraction script output {.tabset}\n\n");
 
 for (currentFile in names(rxs$rxsOutput)) {
@@ -263,7 +270,8 @@ operationalisations <- rxs_get_values(rxs,
 operationalisations <- data.frame(study = names(operationalisations),
                                   operationalisation = operationalisations);
 
-operationalisations$study <- gsub("(.*).rxs.Rmd.*", "\\1", operationalisations$study);
+operationalisations$study <-
+  gsub("(.*).rxs.Rmd.*", "\\1", operationalisations$study);
 
 row.names(operationalisations) <- NULL;
 
@@ -274,7 +282,15 @@ write.csv(operationalisations,
 
 # Results
 
-## The full initial list of extracted operationalisations {.tabset}
+## A full list of all extracted entities 
+
+```{r all-extracted-entities}
+
+rxs_extractedListEntities(rxs);
+
+```
+
+## The full list of extracted operationalisations {.tabset}
 
 ### Description
 
@@ -294,21 +310,60 @@ These operationalisations were then aggregated into overarching categories.
 
 operationalisations_categorized <-
   read_excel(file.path(workingPath, "operationalisations_scriptie_excel.xlsx"),
-             sheet=2, skip=2);
+             sheet=2, skip=1);
 
 operationalisations_categorized <-
   as.data.frame(operationalisations_categorized[, -1]);
 
 names(operationalisations_categorized) <- c('study', 'operationalisations', 'category1', 'category2');
 
+operationalisations_categorized;
 
 ```
 
-## A full list of all extracted entities 
+## Sample size copying
 
-```{r all-extracted-entities}
+The sample sizes were then copied to each association.
 
-rxs_extractedListEntities(rxs$rxsTrees);
+```{r copy-sample-sizes, results='asis'}
+
+invisible(lapply(names(rxs$rxsTrees), function(studyName) {
+  rxs$rxsTrees[[studyName]]$Do(function(nd) {
+    ### Then check which value for n we will use
+    if (is.null(nd$value$assoc.n) || is.na(nd$value$assoc.n)) {
+      cat0("\n- In study '", studyName,
+           "', no sample size specified in association '", nd$name, "'; ");
+      if (is.null(nd$value$assoc.subsample) || is.na(nd$value$assoc.subsample)) {
+        ### Use general study n
+        nd$value$assoc.n <- nd$root$methods$N$value;
+        cat0("added sample size from study metadata (", nd$value$assoc.n, ").");
+      } else {
+        ### Use n from a subsample
+        useNode <- FindNode(node=nd$root,
+                            name=nd$value$assoc.subsample);
+        nd$value$assoc.n <-
+          useNode$value$subsample.N;
+        cat0("added sample size from metadata from subsample '",
+            nd$value$assoc.subsample,
+            "' (", nd$value$assoc.n, ").");
+        if (!is.null(useNode$value$subsample.Ntype) && 
+            !is.na(useNode$value$subsample.Ntype) &&
+            useNode$value$subsample.Ntype == "season") {
+          nd$value$assoc.n <- 34 * nd$value$assoc.n;
+        } else if(!is.null(useNode$value$subsample.Ntype) && 
+                  !is.na(useNode$value$subsample.Ntype) &&
+                  useNode$value$subsample.Ntype == "team") {
+          nd$value$assoc.n <- 1 * nd$value$assoc.n;
+        }
+      }
+    }
+  }, filterFun=function(nd) {
+    ### Only get lists from the results
+    return(('results' %IN% nd$path) &&
+           ('value' %IN% nd$fields) &&
+           (is.list(nd$value)));
+  });
+}));
 
 ```
 
@@ -336,11 +391,13 @@ invisible(lapply(rxs$rxsTrees, function(node) {
       if (is.null(nd$value$assoc.n) || is.na(nd$value$assoc.n)) {
         if (is.null(nd$value$assoc.subsample) || is.na(nd$value$assoc.subsample)) {
           ### Use general study n
-          n <- nd$root$methods$N$value;
+          n <-
+            nd$root$methods$N$value;
         } else {
           ### Use n from a subsample
-          n <- FindNode(node=node$root,
-                        name=nd$value$assoc.subsample)$value$subsample.N;
+          n <-
+            FindNode(node=node$root,
+                     name=nd$value$assoc.subsample)$value$subsample.N;
         }
       } else {
         ### Use n specified for this analysis
@@ -358,47 +415,279 @@ invisible(lapply(rxs$rxsTrees, function(node) {
   });
 }));
 
+
+### A Generalized Formula for Converting
+### Chi-Square Tests to Effect Sizes for Meta-Analysis
+### http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0010059
+
+
+### https://www.personality-project.org/r/html/phi2poly.html
+
 ### Next up: converting chi squared to V (which is basically r)
-invisible(lapply(rxs$rxsTrees, function(node) {
-  node$Do(function(nd) {
-    ### First check whether r is missing but d is present
-    if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
-        (!is.null(nd$value$assoc.V) && !is.na(nd$value$assoc.V))) {
-      ### Convert V to r and store it
-      
-      
-      
-      
-      
-      
-      nd$value$assoc.r <- convert.V.to.r(V = nd$value$assoc.V);
-    }
-  }, filterFun=function(nd) {
-    ### Only get lists from the results
-    return(('results' %IN% nd$path) &&
-           ('value' %IN% nd$fields) &&
-           (is.list(nd$value)));
-  });
-}));
+# invisible(lapply(rxs$rxsTrees, function(node) {
+#   node$Do(function(nd) {
+#     ### First check whether r is missing but d is present
+#     if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
+#         (!is.null(nd$value$assoc.V) && !is.na(nd$value$assoc.V))) {
+#       ### Convert V to r and store it
+#       
+#       
+#       
+#       
+#       
+#       
+#       nd$value$assoc.r <- convert.V.to.r(V = nd$value$assoc.V);
+#     }
+#   }, filterFun=function(nd) {
+#     ### Only get lists from the results
+#     return(('results' %IN% nd$path) &&
+#            ('value' %IN% nd$fields) &&
+#            (is.list(nd$value)));
+#   });
+# }));
 
 ### Next up: converting eta squared (which is basically r)
-invisible(lapply(rxs$rxsTrees, function(node) {
-  node$Do(function(nd) {
-    ### First check whether r is missing but d is present
-    if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
-        (!is.null(nd$value$assoc.V) && !is.na(nd$value$assoc.V))) {
-      ### Convert V to r and store it
-      nd$value$assoc.r <- convert.V.to.r(V = nd$value$assoc.V);
-    }
-  }, filterFun=function(nd) {
-    ### Only get lists from the results
-    return(('results' %IN% nd$path) &&
-           ('value' %IN% nd$fields) &&
-           (is.list(nd$value)));
-  });
-}));
+# invisible(lapply(rxs$rxsTrees, function(node) {
+#   node$Do(function(nd) {
+#     ### First check whether r is missing but d is present
+#     if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
+#         (!is.null(nd$value$assoc.etasq) && !is.na(nd$value$assoc.etasq))) {
+#       ### Convert V to r and store it
+#       nd$value$assoc.r <- convert.etasq.to.r(etasq = nd$value$assoc.etasq);
+#     }
+#   }, filterFun=function(nd) {
+#     ### Only get lists from the results
+#     return(('results' %IN% nd$path) &&
+#            ('value' %IN% nd$fields) &&
+#            (is.list(nd$value)));
+#   });
+# }));
 
 
 ```
 
+## Adding operationalisation categorisation to the study tree
 
+```{r adding-operationalisation-categorisation}
+
+invisible(apply(operationalisations_categorized,
+                1,
+                function(cat_oper) {
+      rxs$rxsTrees[[cat_oper['study']]]$results$Do(function(node) {
+        if (!is.null(node$value$assoc.var1name) &&
+            !is.na(node$value$assoc.var1name) &&
+            (node$value$assoc.var1name == cat_oper['operationalisations'])) {
+          node$value$assoc.var1_cat1 <- cat_oper['category1'];
+          node$value$assoc.var1_cat2 <- cat_oper['category2'];
+          cat0("\nIn study '", cat_oper['study'],
+               "' added categorisation to '",
+               node$value$assoc.var1name, "'.");
+        } else if (!is.null(node$value$assoc.var2name) &&
+            !is.na(node$value$assoc.var2name) &&
+            (node$value$assoc.var2name == cat_oper['operationalisations'])) {
+          node$value$assoc.var2_cat1 <- cat_oper['category1'];
+          node$value$assoc.var2_cat2 <- cat_oper['category2'];
+          cat0("\nIn study '", cat_oper['study'],
+               "' added categorisation to '",
+               node$value$assoc.var2name, "'.");
+        }
+      });
+    }));
+
+cat("\n\n");
+
+```
+
+## Get dataframe with effect sizes, studies, and variables
+
+```{r result-dataframe, cols.print=14}
+
+dat <-
+  lapply(names(rxs$rxsTrees),
+         function(studyName) {
+           rxs$rxsTrees[[studyName]]$Get(function(node) {
+               if (!is.null(node$value$assoc.var1name) &&
+                   !is.na(node$value$assoc.var1name) &&
+                   !is.null(node$value$assoc.var2name) &&
+                   !is.na(node$value$assoc.var2name)) {
+                 resDf <- data.frame(study=studyName,
+                                   var1 = node$value$assoc.var1name,
+                                   var2 = node$value$assoc.var2name);
+                 resDf[, 'var1_cat1'] <- ifelse(
+                   is.null(node$value$assoc.var1_cat1),
+                           NA,
+                           node$value$assoc.var1_cat1);
+                 resDf[, 'var1_cat2'] <- ifelse(
+                   is.null(node$value$assoc.var1_cat2),
+                           NA,
+                           node$value$assoc.var1_cat2);
+                 resDf[, 'var2_cat1'] <- ifelse(
+                   is.null(node$value$assoc.var2_cat1),
+                           NA,
+                           node$value$assoc.var2_cat1);
+                 resDf[, 'var2_cat2'] <- ifelse(
+                   is.null(node$value$assoc.var2_cat2),
+                           NA,
+                           node$value$assoc.var2_cat2);
+                 resDf[, 'r'] <- ifelse(
+                   is.null(node$value$assoc.r),
+                           NA,
+                           node$value$assoc.r);
+                 resDf[, 'n'] <- ifelse(
+                   is.null(node$value$assoc.n),
+                           NA,
+                           node$value$assoc.n);
+                 resDf <- resDf[, c('study',
+                                    'r',
+                                    'var1',
+                                    'var2',
+                                    'var1_cat1',
+                                    'var1_cat2',
+                                    'var2_cat1',
+                                    'var2_cat2',
+                                    'n')];
+                 return(resDf);
+               }
+             }, filterFun=function(nd) {
+               return(('results' %IN% nd$path) &&
+                      ('value' %IN% nd$fields) &&
+                      (is.list(nd$value)));
+               });
+         });
+
+dat <- do.call(rbind, unlist(dat, recursive=FALSE));
+
+row.names(dat) <- NULL;
+
+dat;
+
+### Add variances
+
+dat[, c('yi', 'vi')] <- escalc('COR', ri=dat$r, ni=as.numeric(dat$n));
+
+completeDat <- dat[!is.na(dat$vi), ];
+
+```
+## Diamond plot of all effect sizes
+
+```{r diamond-plots, fig.height=14, warning=FALSE}
+
+dat[, c('yi', 'vi')] <- escalc('COR', ri=dat$r, ni=as.numeric(dat$n));
+
+completeDat <- dat[!is.na(dat$vi), ];
+
+completeDat$var1_cat1 <- ifelse(is.na(completeDat$var1_cat1),
+                                "uncategorized",
+                                completeDat$var1_cat1);
+completeDat$var2_cat1 <- ifelse(is.na(completeDat$var2_cat1),
+                                "uncategorized",
+                                completeDat$var2_cat1);
+
+depVars <- c('HAoperationalisatie',
+             'HAuitkomst');
+
+completeDat$iv <- ifelse(completeDat$var1_cat1 %in% depVars,
+                         completeDat$var2_cat1,
+                         completeDat$var1_cat1);
+
+### Flip outcome if need be; normally, var2 is the dependent variable,
+### but if var1 is the dependent variable, the outcomes are reverse coded
+completeDat$r <- ifelse(completeDat$var1_cat1 %in% depVars,
+                        -1 * completeDat$r,
+                        completeDat$r);
+
+### Add confidence intervals
+completeDat[, c('lo', 'hi')] <- t(mapply(confIntR, completeDat$r, as.numeric(completeDat$n)));
+
+### Split dataframe for separate diamond plots
+completeDat_locationEffects <- completeDat[completeDat$var1_cat1=="HAoperationalisatie" |
+                                           completeDat$var2_cat1=="HAoperationalisatie", ];
+
+completeDat_homeAdvantage <- completeDat[completeDat$var1_cat1=="HAuitkomst" |
+                                         completeDat$var2_cat1=="HAuitkomst", ];
+
+rawDiamondPlot <-
+  diamondPlot(completeDat[, c('lo', 'r', 'hi')],
+              yLabels=paste(completeDat$study, "-", completeDat$var1, "&", completeDat$var2));
+rawDiamondPlot;
+ggsave(file.path(workingPath, "raw-diamond-plot-without-meta-analysis.png"),
+       height=14, width=8);
+```
+
+### Game location, before meta-analysis
+
+```{r diamond-plot-location, fig.height=10}
+
+locationOnly <-
+  diamondPlot(completeDat_locationEffects[, c('lo', 'r', 'hi')],
+              yLabels=paste(completeDat_locationEffects$study, "-", completeDat_locationEffects$var1, "&", completeDat_locationEffects$var2));
+locationOnly;
+ggsave(file.path(workingPath, "diamond-plot-for-location-without-meta-analysis.png"),
+       height=10, width=8);
+
+```
+
+### Home advantage, before meta-analysis
+
+```{r diamond-plot-home-advantage}
+
+homeAdvantage <-
+  diamondPlot(completeDat_homeAdvantage[, c('lo', 'r', 'hi')],
+              yLabels=paste(completeDat_homeAdvantage$study, "-", completeDat_homeAdvantage$var1, "&", completeDat_homeAdvantage$var2));
+homeAdvantage;
+ggsave(file.path(workingPath, "diamond-plot-for-home-advantage-without-meta-analysis.png"),
+       height=8, width=8);
+
+```
+
+### Meta-analysis of game location effect sizes
+
+```{r game-location-ma}
+
+gameLocationRma <- dlply(completeDat_locationEffects, .(iv),
+                         function(x) {
+                           return(rma(x$yi, x$vi));
+                         });
+gameLocationDf <- do.call(rbind,
+                          lapply(gameLocationRma,
+                                 function(rmaRes) {
+                                   return(data.frame(lo = rmaRes$ci.lb,
+                                                     r = rmaRes$b,
+                                                     hi = rmaRes$ci.ub));
+                                 }));
+gameLocationDf$vars <- names(gameLocationRma);
+gameLocationDf <- gameLocationDf[gameLocationDf$vars != 'uncategorized', ];
+
+locationRmaDiamondplot <-
+  diamondPlot(gameLocationDf[, c('lo', 'r', 'hi')], yLabels=gameLocationDf$vars);
+locationRmaDiamondplot;
+ggsave(file.path(workingPath, "diamond-plot-for-location-with-meta-analysis.png"),
+       height=8, width=8);
+
+```
+
+### Meta-analysis of home advantage effect sizes
+
+```{r home-advantage-ma}
+
+homeAdvantageRma <- dlply(completeDat_homeAdvantage, .(iv),
+                          function(x) {
+                            return(rma(x$yi, x$vi));
+                          });
+homeAdvantageDf <- do.call(rbind,
+                           lapply(homeAdvantageRma,
+                                  function(rmaRes) {
+                                    return(data.frame(lo = rmaRes$ci.lb,
+                                                      r = rmaRes$b,
+                                                      hi = rmaRes$ci.ub));
+                                  }));
+homeAdvantageDf$vars <- names(homeAdvantageRma);
+homeAdvantageDf <- homeAdvantageDf[homeAdvantageDf$vars != 'uncategorized', ];
+
+homeAdvantageRmaDiamondplot <-
+  diamondPlot(homeAdvantageDf[, c('lo', 'r', 'hi')], yLabels=homeAdvantageDf$vars);
+homeAdvantageRmaDiamondplot;
+ggsave(file.path(workingPath, "diamond-plot-for-home-advantage-with-meta-analysis.png"),
+       height=8, width=8);
+
+```
