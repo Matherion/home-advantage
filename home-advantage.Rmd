@@ -18,6 +18,8 @@ safeRequire('plyr');             ### For easily processing and restructuring dat
 safeRequire("googlesheets");     ### To import data from google sheets in metabefor
 safeRequire('jsonlite');         ### To import a list of country codes in metabefor
 safeRequire('readxl');           ### To read Excel files
+safeRequire('knitr');            ### For kable
+safeRequire('grid');             ### Force drawing of plots
 safeRequire('data.tree');        ### To work with data structured in a tree in metabefor
 safeRequire('metafor');          ### For the meta-analysis
 safeRequire('ggplot2');          ### For saving plots
@@ -447,21 +449,21 @@ invisible(lapply(rxs$rxsTrees, function(node) {
 # }));
 
 ### Next up: converting eta squared (which is basically r)
-# invisible(lapply(rxs$rxsTrees, function(node) {
-#   node$Do(function(nd) {
-#     ### First check whether r is missing but d is present
-#     if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
-#         (!is.null(nd$value$assoc.etasq) && !is.na(nd$value$assoc.etasq))) {
-#       ### Convert V to r and store it
-#       nd$value$assoc.r <- convert.etasq.to.r(etasq = nd$value$assoc.etasq);
-#     }
-#   }, filterFun=function(nd) {
-#     ### Only get lists from the results
-#     return(('results' %IN% nd$path) &&
-#            ('value' %IN% nd$fields) &&
-#            (is.list(nd$value)));
-#   });
-# }));
+invisible(lapply(rxs$rxsTrees, function(node) {
+  node$Do(function(nd) {
+    ### First check whether r is missing but d is present
+    if ((is.null(nd$value$assoc.r) || is.na(nd$value$assoc.r)) &&
+        (!is.null(nd$value$assoc.etasq) && !is.na(nd$value$assoc.etasq))) {
+      ### Convert V to r and store it
+      nd$value$assoc.r <- convert.etasq.to.r(etasq = nd$value$assoc.etasq);
+    }
+  }, filterFun=function(nd) {
+    ### Only get lists from the results
+    return(('results' %IN% nd$path) &&
+           ('value' %IN% nd$fields) &&
+           (is.list(nd$value)));
+  });
+}));
 
 
 ```
@@ -568,6 +570,7 @@ dat[, c('yi', 'vi')] <- escalc('COR', ri=dat$r, ni=as.numeric(dat$n));
 completeDat <- dat[!is.na(dat$vi), ];
 
 ```
+
 ## Diamond plot of all effect sizes
 
 ```{r diamond-plots, fig.height=14, warning=FALSE}
@@ -625,6 +628,8 @@ locationOnly;
 ggsave(file.path(workingPath, "diamond-plot-for-location-without-meta-analysis.png"),
        height=10, width=8);
 
+kable(completeDat_locationEffects[, c('study', 'lo', 'r', 'hi')]);
+
 ```
 
 ### Home advantage, before meta-analysis
@@ -638,11 +643,15 @@ homeAdvantage;
 ggsave(file.path(workingPath, "diamond-plot-for-home-advantage-without-meta-analysis.png"),
        height=8, width=8);
 
+kable(completeDat_homeAdvantage[, c('study', 'lo', 'r', 'hi')]);
+
 ```
 
-### Meta-analysis of game location effect sizes
+### Meta-analysis of game location effect sizes {.tabset}
 
-```{r game-location-ma}
+#### Main results
+
+```{r game-location-ma-overview}
 
 gameLocationRma <- dlply(completeDat_locationEffects, .(iv),
                          function(x) {
@@ -664,9 +673,32 @@ locationRmaDiamondplot;
 ggsave(file.path(workingPath, "diamond-plot-for-location-with-meta-analysis.png"),
        height=8, width=8);
 
+kable(gameLocationDf[, c('vars', 'lo', 'r', 'hi')]);
+
 ```
 
-### Meta-analysis of home advantage effect sizes
+#### Detailed meta-analysis
+
+```{r game-location-ma-details, results='asis'}
+
+invisible(mapply(function(xRma, xName) {
+    cat0("\n\n##### ", xName, "\n\n");
+    cat0("\n\n");
+    cat0(paste0("<pre>",
+                paste0(capture.output(xRma), collapse="\n"),
+                "</pre>"));
+    forest(xRma);
+    cat0("\n\n");
+    cat0("\n\n");
+  },
+  gameLocationRma,
+  names(gameLocationRma)));
+
+```
+
+### Meta-analysis of home advantage effect sizes {.tabset}
+
+#### Main results
 
 ```{r home-advantage-ma}
 
@@ -689,5 +721,26 @@ homeAdvantageRmaDiamondplot <-
 homeAdvantageRmaDiamondplot;
 ggsave(file.path(workingPath, "diamond-plot-for-home-advantage-with-meta-analysis.png"),
        height=8, width=8);
+
+kable(homeAdvantageDf[, c('vars', 'lo', 'r', 'hi')]);
+
+```
+
+#### Detailed meta-analysis
+
+```{r home-advantage-ma-details, results='asis'}
+
+invisible(mapply(function(xRma, xName) {
+    cat0("\n\n##### ", xName, "\n\n");
+    cat0("\n\n");
+    cat0(paste0("<pre>",
+                paste0(capture.output(xRma), collapse="\n"),
+                "</pre>"));
+    cat0("\n\n");
+    forest(xRma);
+    cat0("\n\n");
+  },
+  homeAdvantageRma,
+  names(homeAdvantageRma)));
 
 ```
